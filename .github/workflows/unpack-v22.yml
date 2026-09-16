@@ -1,0 +1,32 @@
+name: FREKANS V22 paketini aç
+
+on:
+  push:
+    paths:
+      - 'FREKANS_FIREBASE_V22_HAZIR.zip'
+      - '.github/workflows/unpack-v22.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: V22 dosyalarını çıkar
+        run: |
+          unzip -o FREKANS_FIREBASE_V22_HAZIR.zip -d /tmp/frekans-v22
+          cp /tmp/frekans-v22/index.html ./index.html
+          cp /tmp/frekans-v22/firebase.json ./firebase.json
+          cp /tmp/frekans-v22/firestore.rules ./firestore.rules
+          cp /tmp/frekans-v22/.firebaserc ./.firebaserc
+      - name: Repoya kaydet
+        run: |
+          git config user.name 'FREKANS Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html firebase.json firestore.rules .firebaserc
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'FREKANS V22 site dosyalarını hazırla'
+          git push
