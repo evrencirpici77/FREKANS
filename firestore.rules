@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function ownerAdmin() { return signedIn() && request.auth.token.email == 'evrencirpici77@gmail.com'; }
+
+    match /users/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && (request.auth.uid == uid || ownerAdmin());
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.email == resource.data.email;
+      allow delete: if ownerAdmin();
+    }
+
+    match /cases/{caseId} {
+      allow read: if resource.data.status == 'approved' || (signedIn() && resource.data.authorId == request.auth.uid) || ownerAdmin();
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if ownerAdmin();
+      allow delete: if ownerAdmin() || (signedIn() && resource.data.authorId == request.auth.uid && resource.data.status == 'pending');
+    }
+
+    match /rooms/{roomId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if false;
+      allow delete: if ownerAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    match /rooms/{roomId}/evidence/{evidenceId} {
+      allow read: if resource.data.status == 'approved' || ownerAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if ownerAdmin();
+      allow delete: if ownerAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+    }
+  }
+}
