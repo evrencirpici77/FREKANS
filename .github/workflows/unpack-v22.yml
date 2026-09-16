@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: V22 dosyalarını çıkar
         run: |
+          rm -rf /tmp/frekans-v22
+          mkdir -p /tmp/frekans-v22
           unzip -o FREKANS_FIREBASE_V22_HAZIR.zip -d /tmp/frekans-v22
           cp /tmp/frekans-v22/index.html ./index.html
           cp /tmp/frekans-v22/firebase.json ./firebase.json
