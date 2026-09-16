@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: V22 dosyalarını çıkar
+      - name: V22 dosyalarını çıkar ve giriş hatasını düzelt
         run: |
           rm -rf /tmp/frekans-v22
           mkdir -p /tmp/frekans-v22
@@ -24,11 +24,16 @@ jobs:
           cp /tmp/frekans-v22/firebase.json ./firebase.json
           cp /tmp/frekans-v22/firestore.rules ./firestore.rules
           cp /tmp/frekans-v22/.firebaserc ./.firebaserc
+          sed -i 's/async async function addEvidenceToRoom/async function addEvidenceToRoom/' index.html
+          if grep -q 'async async function' index.html; then
+            echo 'JavaScript düzeltmesi başarısız'
+            exit 1
+          fi
       - name: Repoya kaydet
         run: |
           git config user.name 'FREKANS Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add index.html firebase.json firestore.rules .firebaserc
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'FREKANS V22 site dosyalarını hazırla'
+          git commit -m 'FREKANS giriş butonu ve müzik başlangıç düzeltmesi'
           git push
