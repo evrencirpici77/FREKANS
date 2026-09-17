@@ -33,10 +33,15 @@ jobs:
 
           # Firebase modülündeki auth nesnesini tüm eski oda fonksiyonlarının da görebileceği
           # tek doğruluk kaynağı olarak yayınla.
-          marker="onAuthStateChanged(auth, async user=>"
-          if marker not in s:
-              raise SystemExit('Firebase Auth dinleyicisi bulunamadı')
-          s=s.replace(marker, "window.frekansFirebaseAuth=auth;\n"+marker, 1)
+          markers=["onAuthStateChanged(auth,async user=>","onAuthStateChanged(auth, async user=>","onAuthStateChanged(auth,(user)=>","onAuthStateChanged(auth, (user)=>"]
+          marker=next((x for x in markers if x in s),None)
+          if marker:
+              s=s.replace(marker, "window.frekansFirebaseAuth=auth;\n"+marker, 1)
+          else:
+              # Auth nesnesinin tanımlandığı yerde global erişim oluştur.
+              m=re.search(r'(const|let|var)\\s+auth\\s*=\\s*getAuth\\([^;]*\\);',s)
+              if not m: raise SystemExit('Firebase auth tanımı bulunamadı')
+              s=s[:m.end()]+"\nwindow.frekansFirebaseAuth=auth;"+s[m.end():]
 
           # Eski requireMember fonksiyonu hangi yerel currentUser değişkenine bakarsa baksın,
           # gerçek Firebase kullanıcısını esas alsın.
