@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: V22 dosyalarını çıkar ve Firebase oturumunu düzelt
+      - name: V22 dosyalarını çıkar ve tek Firebase oturumu kullan
         run: |
           rm -rf /tmp/frekans-v22
           mkdir -p /tmp/frekans-v22
@@ -27,46 +27,55 @@ jobs:
           sed -i 's/async async function addEvidenceToRoom/async function addEvidenceToRoom/' index.html
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
-          # Eski üyeliği gerçek Firebase hesabına dönüştür.
-          old='<button class="miniBtn" style="margin-top:10px;width:100%" onclick="forgotPassword()">ŞİFREMİ UNUTTUM</button><p class="subtle" style="margin-top:12px">Hesabın yoksa <b onclick="showRegister()" style="cursor:pointer;color:#d53a4c">üye ol</b>.</p>'
-          new='<button class="miniBtn" style="margin-top:10px;width:100%" onclick="forgotPassword()">ŞİFREMİ UNUTTUM</button><button class="miniBtn" style="margin-top:8px;width:100%" onclick="activateFirebaseAccount()">ESKİ ÜYELİĞİMİ AKTİF ET</button><p class="subtle" style="margin-top:12px">Hesabın yoksa <b onclick="showRegister()" style="cursor:pointer;color:#d53a4c">üye ol</b>.</p>'
-          if old in s:
-              s=s.replace(old,new,1)
-
-          old2="window.forgotPassword=async function(){const el=document.getElementById('loginEmail'),email=(el?.value||'').trim();if(!email.includes('@')){showToast('Önce e-posta adresini yaz');return}try{await sendPasswordResetEmail(auth,email);showToast('Şifre yenileme bağlantısı e-postana gönderildi')}catch{showToast('Şifre yenileme e-postası gönderilemedi')}};"
-          new2="window.activateFirebaseAccount=async function(){const email=(document.getElementById('loginEmail')?.value||'').trim().toLowerCase(),password=document.getElementById('loginPass')?.value||'';if(!email.includes('@')||password.length<6){showToast('E-posta ve en az 6 karakterlik şifreni yaz');return}try{const c=await createUserWithEmailAndPassword(auth,email,password);const name=email.split('@')[0];await updateProfile(c.user,{displayName:name});await setDoc(doc(db,'users',c.user.uid),{displayName:name,email,createdAt:serverTimestamp(),status:'active'},{merge:true});window.currentUser=uiUser(c.user,{displayName:name});closeSheet('authSheet');updateMemberUI();showToast('Firebase üyeliğin aktif edildi')}catch(e){if(e.code==='auth/email-already-in-use'){showToast('Bu hesap zaten Firebase’de kayıtlı. GİRİŞ YAP veya ŞİFREMİ UNUTTUM kullan.')}else if(e.code==='auth/weak-password'){showToast('Şifre en az 6 karakter olmalı')}else{showToast('Üyelik etkinleştirilemedi')}}};\nwindow.forgotPassword=async function(){const el=document.getElementById('loginEmail'),email=(el?.value||'').trim();if(!email.includes('@')){showToast('Önce e-posta adresini yaz');return}try{await sendPasswordResetEmail(auth,email);showToast('Firebase hesabı varsa yenileme bağlantısı gönderildi. Gelen kutusu ve spam klasörünü kontrol et.')}catch(e){showToast('Şifre yenileme isteği gönderilemedi')}};"
-          if old2 in s:
-              s=s.replace(old2,new2,1)
-
-          # Firebase Auth dışındaki eski yerel oturumun üyelik/yönetici sayılmasını engelle.
+          # Firebase modülündeki auth nesnesini tüm eski oda fonksiyonlarının da görebileceği
+          # tek doğruluk kaynağı olarak yayınla.
           marker="onAuthStateChanged(auth, async user=>"
           if marker not in s:
               raise SystemExit('Firebase Auth dinleyicisi bulunamadı')
+          s=s.replace(marker, "window.frekansFirebaseAuth=auth;\n"+marker, 1)
 
-          # UI'nin kullandığı currentUser sadece Auth dinleyicisinden gelsin.
-          s=s.replace("window.currentUser=uiUser(c.user,{displayName:name});closeSheet('authSheet');updateMemberUI();showToast('Firebase üyeliğin aktif edildi')",
-                      "showToast('Firebase üyeliğin aktif edildi')",1)
+          # Eski requireMember fonksiyonu hangi yerel currentUser değişkenine bakarsa baksın,
+          # gerçek Firebase kullanıcısını esas alsın.
+          matches=list(re.finditer(r'function\s+requireMember\s*\([^)]*\)\s*\{',s))
+          if not matches:
+              raise SystemExit('requireMember bulunamadı')
+          for m in reversed(matches):
+              pos=m.end()
+              s=s[:pos]+"if(window.frekansFirebaseAuth?.currentUser){return true;}"+s[pos:]
 
-          # Eski deneme metnini canlı sistem metniyle değiştir.
-          s=s.replace('Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir. Canlı sürümde sunucuya yüklenip moderasyondan geçecek.',
-                      'Yüklediğiniz kanıtlar yayınlanmadan önce moderasyon kontrolünden geçer.')
+          # Oda yorum fonksiyonlarında doğrudan eski currentUser kontrolü varsa Firebase kullanıcıya bağla.
+          s=s.replace("if(!currentUser){showToast('Bu işlem için üye girişi gerekli');return}",
+                      "if(!window.frekansFirebaseAuth?.currentUser){showToast('Bu işlem için üye girişi gerekli');return}")
+          s=s.replace('if(!currentUser){showToast("Bu işlem için üye girişi gerekli");return}',
+                      'if(!window.frekansFirebaseAuth?.currentUser){showToast("Bu işlem için üye girişi gerekli");return}')
+
+          # Canlı sürümde kalmaması gereken deneme açıklamasının tüm varyasyonlarını temizle.
+          s=re.sub(r'Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir\.\s*Canlı sürümde sunucuya yüklenip moderasyondan geçecek\.',
+                   'Yüklediğiniz kanıtlar yayınlanmadan önce moderasyon kontrolünden geçer.',s)
 
           p.write_text(s,encoding='utf-8')
           PY
-          if grep -q 'async async function' index.html; then
-            echo 'JavaScript düzeltmesi başarısız'
+
+          # Yayına girmeden önce beklediğimiz düzeltmeler gerçekten dosyada mı kontrol et.
+          grep -q 'window.frekansFirebaseAuth=auth' index.html
+          grep -q 'window.frekansFirebaseAuth?.currentUser' index.html
+          if grep -q 'Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir' index.html; then
+            echo 'Eski deneme metni hâlâ dosyada'
             exit 1
           fi
-          grep -q 'onAuthStateChanged(auth' index.html
-          grep -q 'activateFirebaseAccount' index.html
+          if grep -q 'async async function' index.html; then
+            echo 'JavaScript sözdizimi düzeltmesi başarısız'
+            exit 1
+          fi
       - name: Repoya kaydet
         run: |
           git config user.name 'FREKANS Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add index.html firebase.json firestore.rules .firebaserc
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'FREKANS gerçek Firebase oturumu ve üyelik düzeltmesi'
+          git commit -m 'FREKANS yorum ve kanıt oturum kontrolünü Firebase ile birleştir'
           git push
