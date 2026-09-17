@@ -1,0 +1,597 @@
+
+===== Bu işlem için üye girişi gerekli =====
+volume=.40;
+    }
+    soundOn=true;
+    const p=ambientAudio.play();
+    if(p&&p.catch)p.catch(()=>showToast('Melodiyi başlatmak için ses düğmesine dokun.'));
+  }catch(e){showToast('Bu tarayıcı melodiyi başlatamadı.')}
+}
+function enterSite(){seedData();document.getElementById('entry').classList.add('hide');startAmbient();updateMemberUI();renderCommunityFeed();history.replaceState(null,'',location.pathname+location.search+'#feed')}
+function toggleSound(){
+  if(!ambientAudio){startAmbient();document.getElementById('soundBtn').textContent='🔊';return}
+  soundOn=!soundOn;
+  if(soundOn){ambientAudio.play().catch(()=>{});document.getElementById('soundBtn').textContent='🔊';showToast('Melodi açık')}
+  else{ambientAudio.pause();document.getElementById('soundBtn').textContent='🔇';showToast('Melodi kapalı')}
+}
+function requireMember(action){if(!currentUser||currentUser.status!=='active'){showToast('Bu işlem için üye girişi gerekli');openAuth();return false}return true}
+function openAuth(){document.getElementById('authSheet').classList.add('open');showLogin()}
+function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=`<div class="adminBox"><span class="badge">⚙ YÖNETİM MERKEZİ</span><p class="subtle">Yalnızca yetkili yönetici hesabı.</p></div><div class="field"><label>Yönetici e-posta</label><input id="loginEmail" type="email" value="admin@frekans.local" autocomplete="username"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="Yönetici şifresi" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="doLogin()">⚙ YÖNETİCİ OLARAK GİR</button>`}
+function showLogin(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><div class="adminBox"><span class="badge">YÖNETİCİ DENEMESİ</span><p class="subtle">E-posta: admin@frekans.local<br>Şifre: 0317</p></div>`}
+function showRegister(){document.getElementById('authTitle').textContent='Üye ol';document.getElementById('authBody').innerHTML=`<div class="field"><label>Rumuz / ad<
+---
+
+===== Deneme sürümünde =====
+="font-size:11px;color:#8d8588">${r.count}</p><h3>Kanıt arşivi</h3><div class="evidence" id="evidenceList"><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">＋<br>FOTOĞRAF</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div></div><div class="field"><label>Kendi kanıtını ekle</label><label class="upload">Fotoğraf, video veya ses seç<input id="roomFiles" type="file" accept="image/*,video/*,audio/*" multiple hidden onchange="if(requireMember())previewFiles(this,'roomPreview',true);else this.value=''"></label><div class="preview" id="roomPreview"></div><div class="fileActions"><button class="btn ghost" onclick="addEvidenceToRoom()">SEÇİLENİ KANITA EKLE</button></div><p class="mediaNote">Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir. Canlı sürümde sunucuya yüklenip moderasyondan geçecek.</p></div><h3>Tartışma</h3><div id="comments"><div class="comment"><b>geceyolcusu77</b><p>Bende de birkaç kez aynı saate yakın oldu. Bundan sonra saati not edip buraya ekleyeceğim.</p></div><div class="comment"><b>rasyonel_biri</b><p>Uyku döngüsü ihtimalini de dışlamayalım. Birkaç haftalık saat verisi olursa daha anlamlı olur.</p></div></div><div class="field"><textarea id="commentText" placeholder="Deneyimini veya açıklamanı yaz..."></textarea></div><button class="btn ghost" onclick="addComment()">YORUMU EKLE</button>`;
+  document.getElementById('roomSheet').classList.add('open'); renderEvidenceArchive(); renderSavedComments();
+}
+function openCreate(){if(!requireMember())return;location.hash='create';document.getElementById('createSheet').classList.add('open')}
+function closeSheet(id){document.getElementById(id).classList.remove('open');if(location.hash.startsWith('#room=')||location.hash.startsWith('#community=')||location.hash==='#create')location.hash='feed'}
+let roomSelected=[];
+function previewFiles(input,target,forRoom=false){let box=document.getElementById(target);box.innerHTML='';let files=[...input.files].slice(0,6);if(forRoom)roomSelected=files;files.forEach(f=>{let u=URL.createObjectURL(f),el;if(f.type.startsWith('image')){el=document.createElement('img');el.src=u;el.alt=f.name}else if(f.type.startsWith('video')){el=document.createElement('video');el.src=u;el.muted=true;el.autoplay=true;el.loop=true;el.playsInline=true}else if(f.type.starts
+---
+
+===== addComment =====
+le hidden onchange="if(requireMember())previewFiles(this,'roomPreview',true);else this.value=''"></label><div class="preview" id="roomPreview"></div><div class="fileActions"><button class="btn ghost" onclick="addEvidenceToRoom()">SEÇİLENİ KANITA EKLE</button></div><p class="mediaNote">Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir. Canlı sürümde sunucuya yüklenip moderasyondan geçecek.</p></div><h3>Tartışma</h3><div id="comments"><div class="comment"><b>geceyolcusu77</b><p>Bende de birkaç kez aynı saate yakın oldu. Bundan sonra saati not edip buraya ekleyeceğim.</p></div><div class="comment"><b>rasyonel_biri</b><p>Uyku döngüsü ihtimalini de dışlamayalım. Birkaç haftalık saat verisi olursa daha anlamlı olur.</p></div></div><div class="field"><textarea id="commentText" placeholder="Deneyimini veya açıklamanı yaz..."></textarea></div><button class="btn ghost" onclick="addComment()">YORUMU EKLE</button>`;
+  document.getElementById('roomSheet').classList.add('open'); renderEvidenceArchive(); renderSavedComments();
+}
+function openCreate(){if(!requireMember())return;location.hash='create';document.getElementById('createSheet').classList.add('open')}
+function closeSheet(id){document.getElementById(id).classList.remove('open');if(location.hash.startsWith('#room=')||location.hash.startsWith('#community=')||location.hash==='#create')location.hash='feed'}
+let roomSelected=[];
+function previewFiles(input,target,forRoom=false){let box=document.getElementById(target);box.innerHTML='';let files=[...input.files].slice(0,6);if(forRoom)roomSelected=files;files.forEach(f=>{let u=URL.createObjectURL(f),el;if(f.type.startsWith('image')){el=document.createElement('img');el.src=u;el.alt=f.name}else if(f.type.startsWith('video')){el=document.createElement('video');el.src=u;el.muted=true;el.autoplay=true;el.loop=true;el.playsInline=true}else if(f.type.startsWith('audio')){el=document.createElement('audio');el.src=u;el.controls=true;el.className='audioPreview'}else{el=document.createElement('div');el.textContent=f.name}box.appendChild(el)})}
+async function addEvidenceToRoom(){if(!requireMember())return;if(!roomSelected.length){showToast('Önce fotoğraf, video veya ses seç');return}if(!currentRoomKey)currentRoomKey='room:unknown';let arr=evidenceByRoom[currentRoomKey]||(evidenceByRoom[currentRoomKey]=[]);for(const f of roomSelected){let mediaId='m'+Date.now()+'_'+Math.random().toString(36).slice(2);try{await putMedia(mediaId,f);arr.push({name:f.name,type:f.type||
+---
+eMemberUI();renderCommunityFeed()}
+function deleteComment(btn,ownerId){if(!currentUser||!(currentUser.role==='admin'||currentUser.id===ownerId)){showToast('Yalnız kendi yorumunu silebilirsin');return}let el=btn.closest('.comment');if(el)el.remove();showToast(currentUser.role==='admin'?'Yorum yönetim tarafından kaldırıldı':'Yorumun silindi')}
+function wireCommentModeration(){document.querySelectorAll('#comments .comment').forEach((d,i)=>{if(d.dataset.wired)return;d.dataset.wired='1';let ownerId=d.dataset.ownerId||'seed';let b=d.querySelector('b');let head=document.createElement('div');head.className='commentHead';if(b){b.replaceWith(head);head.appendChild(b)}else{d.prepend(head)}if(currentUser&&currentUser.role==='admin'){let x=document.createElement('button');x.className='commentDelete';x.textContent='YORUMU KALDIR';x.onclick=()=>deleteComment(x,ownerId);head.appendChild(x)}})}
+function addComment(){if(!requireMember())return;let t=document.getElementById('commentText');if(!t||!t.value.trim())return;let arr=commentsByRoom[currentRoomKey]||(commentsByRoom[currentRoomKey]=[]);arr.push({id:'cm'+Date.now()+'_'+Math.random().toString(36).slice(2),owner:currentUser.name,ownerId:currentUser.id,text:t.value.trim(),time:Date.now()});saveCommentState(commentsByRoom);t.value='';renderSavedComments();showToast('Yorum eklendi')}
+function escapeHtml(v){return v.replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function filterCategory(cat,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.feature,.case').forEach(card=>{
+    const cats=(card.dataset.cat||'').split(/\s+/);
+    const show=cat==='all'||cats.includes(cat);
+    card.classList.toggle('hiddenByFilter',!show);
+  });
+  const head=document.querySelector('.sectionHead h2');
+  if(head)head.textContent=cat==='all'?'Şu an yükselen':(btn?btn.textContent:'Seçilen kategori');
+  showToast(cat==='all'?'Tüm vakalar gösteriliyor':(btn?btn.textContent+' filtrelendi':'Filtre uygulandı'));
+}
+function goNav(which){
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('on',n.dataset.nav===which));
+  if(which==='feed'){location.hash='feed';closeNavSheet();window.scrollTo({top:0,behavior:'smooth'});return}
+  if(location.hash==='#'+which){openNav(which)}else{location.hash=which}
+}
+function openAdminPanel(){if(!currentUser||currentUser.role!=='admin'){showToast('Yönetici girişi gerekli');openAut
+---
+＋<br>FOTOĞRAF</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div></div><div class="field"><label>Kendi kanıtını ekle</label><label class="upload">Fotoğraf, video veya ses seç<input id="roomFiles" type="file" accept="image/*,video/*,audio/*" multiple hidden onchange="if(requireMember())previewFiles(this,'roomPreview',true);else this.value=''"></label><div class="preview" id="roomPreview"></div><div class="fileActions"><button class="btn ghost" onclick="addEvidenceToRoom()">SEÇİLENİ KANITA EKLE</button></div></div><h3>Tartışma</h3><div id="comments"></div><div class="field"><textarea id="commentText" placeholder="Bu olayla ilgili deneyimini, fikrini veya açıklamanı yaz..."></textarea></div><button class="btn ghost" onclick="addComment()">YORUMU EKLE</button>`;
+  document.getElementById('roomSheet').classList.add('open'); renderEvidenceArchive(); renderSavedComments();
+}
+function renderCommunityFeed(){let box=document.getElementById('communityFeed');if(!box)return;let arr=getCases().filter(x=>x.status==='approved').slice(0,8);box.innerHTML=arr.length?arr.map(x=>`<div class="pendingCard" role="button" tabindex="0" onclick="openCommunityCase('${x.id}')" onkeydown="if(event.key==='Enter')openCommunityCase('${x.id}')" style="cursor:pointer"><span class="badge ok">YÖNETİM ONAYLI</span>${x.cover?`<img class="feedCover" src="${x.cover}" alt="Vaka kapak resmi">`:''}<h4>${escapeHtml(x.title)}</h4><div class="subtle">${escapeHtml(x.category)} · ${escapeHtml(x.authorName)}</div><p class="story">${escapeHtml(x.story.slice(0,180))}${x.story.length>180?'…':''}</p><button type="button" class="roomOpenBtn" onclick="event.stopPropagation();openCommunityCase('${x.id}')">VAKA ODASINA GİR →</button></div>`).join(''):'<p class="story">Henüz topluluk tarafından gönderilip onaylanmış vaka yok.</p>'}
+function renderSearch(q){let target=document.getElementById('searchResults');if(!target)return;q=(q||'').toLocaleLowerCase('tr');let arr=Object.entries(rooms).filter(([id,r])=>(r.title+' '+r.tag+' '+r.story).toLocaleLowerCase('tr').includes(q));target.innerHTML=arr.map(([id,r])=>`<div class="result" onclick="closeNavSheet();openRoom('${id}')"><b>${r.title}</b><small>${r.tag} · ${r.count}</small></div>`).join('')||'<p class="story">Eşleşen vaka bulunamadı.</p>'}
+function closeNavSheet(){document.getElementById('navSheet').
+---
+oomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div>`;try{const snap=await getDocs(collection(db,'rooms',encodeURIComponent(roomKey),'evidence'));const items=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status==='approved'||x.ownerId===auth.currentUser?.uid||isOwner());box.innerHTML=picks+items.map(x=>`<div class="evidenceItem"><div class="subtle">${x.status==='pending'?'⏳ ONAY BEKLİYOR':'✓ ONAYLI'} · ${safe(x.ownerName)}</div>${(x.type||'').startsWith('image/')?`<img src="${safe(x.url)}" style="width:100%;border-radius:10px;margin-top:6px">`:(x.type||'').startsWith('video/')?`<video src="${safe(x.url)}" controls style="width:100%;margin-top:6px"></video>`:`<audio src="${safe(x.url)}" controls style="width:100%;margin-top:6px"></audio>`}</div>`).join('')}catch{box.innerHTML=picks}};
+window.addComment=async function(){if(!requireMember())return;const t=document.getElementById('commentText');if(!t?.value.trim())return;const roomKey=activeRoomKey();try{await addDoc(collection(db,'rooms',encodeURIComponent(roomKey),'comments'),{ownerId:auth.currentUser.uid,ownerName:window.currentUser.name,text:t.value.trim(),createdAt:serverTimestamp(),createdMs:Date.now()});t.value='';await window.renderSavedComments();showToast('Yorum eklendi')}catch{showToast('Yorum gönderilemedi')}};
+window.renderSavedComments=async function(){const box=document.getElementById('comments');if(!box)return;const roomKey=activeRoomKey();try{const snap=await getDocs(query(collection(db,'rooms',encodeURIComponent(roomKey),'comments'),orderBy('createdMs','asc'),limit(100)));box.innerHTML=snap.docs.map(d=>{const x=d.data();return `<div class="comment"><b>${safe(x.ownerName)}</b><p>${safe(x.text)}</p><small>${new Date(x.createdMs||Date.now()).toLocaleString('tr-TR')}</small></div>`}).join('')||'<p class="subtle">Henüz yorum yok.</p>'}catch{box.innerHTML='<p class="subtle">Yorumlar yüklenemedi.</p>'}};
+
+window.renderAdminCases=async function(){const box=document.getElementById('adminCases');if(!box||!isOwner())return;try{const snap=await getDocs(query(collection(db,'cases'),where('status','==','pending'),limit(50)));box.innerHTML=snap.empty?'<p class="story">Bekleyen vaka yok.</p>':snap.docs.map(d=>{const x=d.data();return `<div class="adminBox"><span class="badge wait">ONAY BEKLİYOR</span><h4>${safe(x.title)}</h4><div class="subtle">${safe(x.category)} · ${safe(x.authorName)}</div><p class="story">${
+---
+
+===== addEvidenceToRoom =====
+İ';showToast('Deneyimin bu vakaya eklendi')}">BEN DE YAŞADIM</button><p style="font-size:11px;color:#8d8588">${r.count}</p><h3>Kanıt arşivi</h3><div class="evidence" id="evidenceList"><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">＋<br>FOTOĞRAF</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div></div><div class="field"><label>Kendi kanıtını ekle</label><label class="upload">Fotoğraf, video veya ses seç<input id="roomFiles" type="file" accept="image/*,video/*,audio/*" multiple hidden onchange="if(requireMember())previewFiles(this,'roomPreview',true);else this.value=''"></label><div class="preview" id="roomPreview"></div><div class="fileActions"><button class="btn ghost" onclick="addEvidenceToRoom()">SEÇİLENİ KANITA EKLE</button></div><p class="mediaNote">Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir. Canlı sürümde sunucuya yüklenip moderasyondan geçecek.</p></div><h3>Tartışma</h3><div id="comments"><div class="comment"><b>geceyolcusu77</b><p>Bende de birkaç kez aynı saate yakın oldu. Bundan sonra saati not edip buraya ekleyeceğim.</p></div><div class="comment"><b>rasyonel_biri</b><p>Uyku döngüsü ihtimalini de dışlamayalım. Birkaç haftalık saat verisi olursa daha anlamlı olur.</p></div></div><div class="field"><textarea id="commentText" placeholder="Deneyimini veya açıklamanı yaz..."></textarea></div><button class="btn ghost" onclick="addComment()">YORUMU EKLE</button>`;
+  document.getElementById('roomSheet').classList.add('open'); renderEvidenceArchive(); renderSavedComments();
+}
+function openCreate(){if(!requireMember())return;location.hash='create';document.getElementById('createSheet').classList.add('open')}
+function closeSheet(id){document.getElementById(id).classList.remove('open');if(location.hash.startsWith('#room=')||location.hash.startsWith('#community=')||location.hash==='#create')location.hash='feed'}
+let roomSelected=[];
+function previewFiles(input,target,forRoom=false){let box=document.getElementById(target);box.innerHTML='';let files=[...input.files].slice(0,6);if(forRoom)roomSelected=files;files.forEach(f=>{let u=URL.createObjectURL(f),el;if(f.type.startsWith('image')){el=document.createElement('img');el.src=u;el.alt=f.name}else if(f.type.startsWith('video')){el=document.createElement('video');el.src=u;el.muted
+---
+ion closeSheet(id){document.getElementById(id).classList.remove('open');if(location.hash.startsWith('#room=')||location.hash.startsWith('#community=')||location.hash==='#create')location.hash='feed'}
+let roomSelected=[];
+function previewFiles(input,target,forRoom=false){let box=document.getElementById(target);box.innerHTML='';let files=[...input.files].slice(0,6);if(forRoom)roomSelected=files;files.forEach(f=>{let u=URL.createObjectURL(f),el;if(f.type.startsWith('image')){el=document.createElement('img');el.src=u;el.alt=f.name}else if(f.type.startsWith('video')){el=document.createElement('video');el.src=u;el.muted=true;el.autoplay=true;el.loop=true;el.playsInline=true}else if(f.type.startsWith('audio')){el=document.createElement('audio');el.src=u;el.controls=true;el.className='audioPreview'}else{el=document.createElement('div');el.textContent=f.name}box.appendChild(el)})}
+async function addEvidenceToRoom(){if(!requireMember())return;if(!roomSelected.length){showToast('Önce fotoğraf, video veya ses seç');return}if(!currentRoomKey)currentRoomKey='room:unknown';let arr=evidenceByRoom[currentRoomKey]||(evidenceByRoom[currentRoomKey]=[]);for(const f of roomSelected){let mediaId='m'+Date.now()+'_'+Math.random().toString(36).slice(2);try{await putMedia(mediaId,f);arr.push({name:f.name,type:f.type||'application/octet-stream',mediaId,owner:(currentUser&&currentUser.name)||'Üye',ownerId:(currentUser&&currentUser.id)||'',time:Date.now()})}catch(e){showToast('Dosya kaydedilemedi')}}saveEvidenceState(evidenceByRoom);document.getElementById('roomPreview').innerHTML='';document.getElementById('roomFiles').value='';roomSelected=[];await renderEvidenceArchive();let box=document.getElementById('evidenceList');if(box)box.scrollIntoView({behavior:'smooth',block:'center'});showToast('Kanıt kaydedildi ve bu odada kalacak')}
+async function fakePublish(){if(!requireMember())return;let title=document.getElementById('newTitle').value.trim(),story=document.getElementById('newStory').value.trim(),category=document.getElementById('newCategory').value;if(!title||story.length<20){showToast('Başlık ve en az 20 karakterlik olay anlatımı gerekli');return}let files=[...(document.getElementById('createFiles').files||[])].map(f=>({name:f.name,type:f.type,size:f.size}));let cases=getCases();cases.unshift({id:'c'+Date.now(),title,story,category,files,authorId:currentUser.id,authorName:currentUser.name,status:'pending',created:Date.now()});saveCases(cases);document.getElementById('newTitle').val
+---
+eMember()){this.textContent='✓ BENZER DENEYİMİN EKLENDİ';showToast('Deneyimin bu vakaya eklendi')}">BEN DE YAŞADIM</button><h3>Kanıt arşivi</h3><div class="evidence" id="evidenceList"><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">＋<br>FOTOĞRAF</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div></div><div class="field"><label>Kendi kanıtını ekle</label><label class="upload">Fotoğraf, video veya ses seç<input id="roomFiles" type="file" accept="image/*,video/*,audio/*" multiple hidden onchange="if(requireMember())previewFiles(this,'roomPreview',true);else this.value=''"></label><div class="preview" id="roomPreview"></div><div class="fileActions"><button class="btn ghost" onclick="addEvidenceToRoom()">SEÇİLENİ KANITA EKLE</button></div></div><h3>Tartışma</h3><div id="comments"></div><div class="field"><textarea id="commentText" placeholder="Bu olayla ilgili deneyimini, fikrini veya açıklamanı yaz..."></textarea></div><button class="btn ghost" onclick="addComment()">YORUMU EKLE</button>`;
+  document.getElementById('roomSheet').classList.add('open'); renderEvidenceArchive(); renderSavedComments();
+}
+function renderCommunityFeed(){let box=document.getElementById('communityFeed');if(!box)return;let arr=getCases().filter(x=>x.status==='approved').slice(0,8);box.innerHTML=arr.length?arr.map(x=>`<div class="pendingCard" role="button" tabindex="0" onclick="openCommunityCase('${x.id}')" onkeydown="if(event.key==='Enter')openCommunityCase('${x.id}')" style="cursor:pointer"><span class="badge ok">YÖNETİM ONAYLI</span>${x.cover?`<img class="feedCover" src="${x.cover}" alt="Vaka kapak resmi">`:''}<h4>${escapeHtml(x.title)}</h4><div class="subtle">${escapeHtml(x.category)} · ${escapeHtml(x.authorName)}</div><p class="story">${escapeHtml(x.story.slice(0,180))}${x.story.length>180?'…':''}</p><button type="button" class="roomOpenBtn" onclick="event.stopPropagation();openCommunityCase('${x.id}')">VAKA ODASINA GİR →</button></div>`).join(''):'<p class="story">Henüz topluluk tarafından gönderilip onaylanmış vaka yok.</p>'}
+function renderSearch(q){let target=document.getElementById('searchResults');if(!target)return;q=(q||'').toLocaleLowerCase('tr');let arr=Object.entries(rooms).filter(([id,r])=>(r.title+' '+r.tag+' '+r.story).toLocaleLowerCase('tr').includes(q));target
+---
+turn}try{await addDoc(collection(db,'cases'),{title,story,category,authorId:auth.currentUser.uid,authorName:window.currentUser.name,status:'pending',createdAt:serverTimestamp(),createdMs:Date.now()});newTitle.value='';newStory.value='';createPreview.innerHTML='';createFiles.value='';showToast('Vaka yönetim onayına gönderildi');closeSheet('createSheet')}catch(e){showToast('Vaka gönderilemedi')}};
+
+async function cloudUpload(file){const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);fd.append('folder','frekans_kanit');const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{method:'POST',body:fd});if(!r.ok)throw new Error('upload');return r.json()}
+function activeRoomKey(){const h=location.hash.replace('#','');return h.startsWith('community=')?'community:'+h.slice(10):h.startsWith('room=')?'room:'+h.slice(5):'room:unknown'}
+window.addEvidenceToRoom=async function(){if(!requireMember())return;const files=[...(document.getElementById('roomFiles')?.files||[])];if(!files.length){showToast('Önce fotoğraf, video veya ses seç');return}const roomKey=activeRoomKey();showToast('Kanıt yükleniyor...');try{for(const f of files){const up=await cloudUpload(f);await addDoc(collection(db,'rooms',encodeURIComponent(roomKey),'evidence'),{ownerId:auth.currentUser.uid,ownerName:window.currentUser.name,name:f.name,type:f.type,url:up.secure_url,publicId:up.public_id,status:'pending',createdAt:serverTimestamp(),createdMs:Date.now()})}roomPreview.innerHTML='';roomFiles.value='';await window.renderEvidenceArchive();showToast('Kanıt yüklendi · yönetici onayı bekliyor')}catch(e){showToast('Kanıt yüklenemedi. Cloudinary ayarını kontrol edeceğiz')}};
+window.renderEvidenceArchive=async function(){const box=document.getElementById('evidenceList');if(!box)return;const roomKey=activeRoomKey();const picks=`<div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">＋<br>FOTOĞRAF</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">▶<br>VİDEO</div><div class="pick" onclick="if(requireMember())document.getElementById('roomFiles').click()">♫<br>SES</div>`;try{const snap=await getDocs(collection(db,'rooms',encodeURIComponent(roomKey),'evidence'));const items=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status==='approved'||x.ownerId===auth.currentUser?.uid||isOwner());box.innerHTML=picks+items.map(x=>`<div class="evidenceItem"><div class="subtle">${x.stat
+---
+
+===== getCurrentUser =====
+
+===== currentUser =====
+Y3hKLACE8oAJFYEMAEkA7MMiNt04IWqkHDZzmdHVAZ9fdpSZ+z9HzI3hUcIGn1sGFDlIcrYKxyevqzQyuGPkMJIlXGMDXPoZZQ0sviMyifuMA5xxelpxv7QcFAJQl51v7QQEA/HYedwgGIyU8g6qKMQAAjK/XqhamaQULw7CwtmlsMllbGlZtFAExDatiY0typqiFjSgyABmDelUJH6BsAcPIQABpADxcZU+mk/31wjfJmp1zde+tRZbn9+ULKOAzh5tJ5zkrBpwWobHkRFnJjJJMnZRsx5uO75PLzaCezAvPwQoV4K6QV2mwpeZ4APqMCVaPIUcIfUaDk2jX25Jqm45zMeeStVxcVMnFoWaZul/xz87k6JQT+HZu2xAAfpY8H9MXEjSAs+T5mL6QoAFQPU9eCBokBlVVBQCAkAOL0GEgQERRIEzMwAERG4ulmNaqIoYpgqpw6+M/JlM4oF2kmI/2fJqmCufeyJtfoFG+LKib9Qgibsvcs35m48/i/BiSibVQbgDP012nl81+cuhy1jZcjsVOt7WYwu9YJRy+rqEqe23CfMhlspXDpglxOOLaPc7gmCV7JbYC426ztwr7AqQcNnZDn6dBBsIhgFFRAE9nZ1MABPaxTQAAAAAAS4goXnMAAAAGITH6AbIelvzYLu8QAqJiCNew5Md2eYcQEBVDuCIoXuAFXiAxPDpK1KBiAABAC6/NAyhEIUHMAAv5VXa9bOt7JYNHq/peSTc+rVaPswbnyxZgdg9WNe2vx+eV2HzpfLwqb1o1sR2ZnWDTg9XTzpGhDACMwsDKlyPYfVpYgF9VBckAALP1fbwycWX3LpTfCtrj2dPmpoF5JR4wD7P1p4BnYlrJ1XQizVOUQrOByQ7PeTgoS8KkMIEA';
+let currentUser=null;
+const STORE_USERS='frekans_v7_users', STORE_SESSION='frekans_v7_session', STORE_CASES='frekans_v7_cases', STORE_EVIDENCE='frekans_v15_evidence', STORE_COMMENTS='frekans_v15_comments';
+function seedData(){
+  let users=JSON.parse(localStorage.getItem(STORE_USERS)||'[]');
+  if(!users.length){users=[{id:'admin',name:'Frekans Yönetimi',email:'admin@frekans.local',password:'0317',role:'admin',status:'active',joined:Date.now()}];localStorage.setItem(STORE_USERS,JSON.stringify(users));}
+  currentUser=users.find(u=>u.id===localStorage.getItem(STORE_SESSION))||null;
+}
+function saveUsers(u){localStorage.setItem(STORE_USERS,JSON.stringify(u))}
+function getUsers(){return JSON.parse(localStorage.getItem(STORE_USERS)||'[]')}
+function getCases(){return JSON.parse(localStorage.getItem(STORE_CASES)||'[]')}
+function saveCases(c){localStorage.setItem(STORE_CASES,JSON.stringify(c))}
+function getEvidenceState(){try{return JSON.parse(localStorage.getItem(STORE_EVIDENCE)||'{}')}catch(e){return {}}}
+function saveEvidenceState(v){localStorage.setItem(STORE_EVIDENCE,JSON.stringify(v))}
+function getCommentState(){try{return JSON.parse(localStorage.getItem(STORE_COMMENTS)||'{}')}catch(e){return {}}}
+function saveCommentState(v){localStorage.setItem(STORE_COMMENTS,JSON.stringify(v))}
+let mediaDBPromise=null, mediaUrlCache={};
+function mediaDB(){if(mediaDBPromise)return mediaDBPromise;mediaDBPromise=new Promise((resolve,reject)=>{let r=indexedDB.open('FrekansMediaDB',1);r.onupgradeneeded=()=>{let db=r.result;if(!db.objectStoreNames.contains('media'))db.createObjectStore('media',{keyPath
+---
+m48/i/BiSibVQbgDP012nl81+cuhy1jZcjsVOt7WYwu9YJRy+rqEqe23CfMhlspXDpglxOOLaPc7gmCV7JbYC426ztwr7AqQcNnZDn6dBBsIhgFFRAE9nZ1MABPaxTQAAAAAAS4goXnMAAAAGITH6AbIelvzYLu8QAqJiCNew5Md2eYcQEBVDuCIoXuAFXiAxPDpK1KBiAABAC6/NAyhEIUHMAAv5VXa9bOt7JYNHq/peSTc+rVaPswbnyxZgdg9WNe2vx+eV2HzpfLwqb1o1sR2ZnWDTg9XTzpGhDACMwsDKlyPYfVpYgF9VBckAALP1fbwycWX3LpTfCtrj2dPmpoF5JR4wD7P1p4BnYlrJ1XQizVOUQrOByQ7PeTgoS8KkMIEA';
+let currentUser=null;
+const STORE_USERS='frekans_v7_users', STORE_SESSION='frekans_v7_session', STORE_CASES='frekans_v7_cases', STORE_EVIDENCE='frekans_v15_evidence', STORE_COMMENTS='frekans_v15_comments';
+function seedData(){
+  let users=JSON.parse(localStorage.getItem(STORE_USERS)||'[]');
+  if(!users.length){users=[{id:'admin',name:'Frekans Yönetimi',email:'admin@frekans.local',password:'0317',role:'admin',status:'active',joined:Date.now()}];localStorage.setItem(STORE_USERS,JSON.stringify(users));}
+  currentUser=users.find(u=>u.id===localStorage.getItem(STORE_SESSION))||null;
+}
+function saveUsers(u){localStorage.setItem(STORE_USERS,JSON.stringify(u))}
+function getUsers(){return JSON.parse(localStorage.getItem(STORE_USERS)||'[]')}
+function getCases(){return JSON.parse(localStorage.getItem(STORE_CASES)||'[]')}
+function saveCases(c){localStorage.setItem(STORE_CASES,JSON.stringify(c))}
+function getEvidenceState(){try{return JSON.parse(localStorage.getItem(STORE_EVIDENCE)||'{}')}catch(e){return {}}}
+function saveEvidenceState(v){localStorage.setItem(STORE_EVIDENCE,JSON.stringify(v))}
+function getCommentState(){try{return JSON.parse(localStorage.getItem(STORE_COMMENTS)||'{}')}catch(e){return {}}}
+function saveCommentState(v){localStorage.setItem(STORE_COMMENTS,JSON.stringify(v))}
+let mediaDBPromise=null, mediaUrlCache={};
+function mediaDB(){if(mediaDBPromise)return mediaDBPromise;mediaDBPromise=new Promise((resolve,reject)=>{let r=indexedDB.open('FrekansMediaDB',1);r.onupgradeneeded=()=>{let db=r.result;if(!db.objectStoreNames.contains('media'))db.createObjectStore('media',{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});return mediaDBPromise}
+async function putMedia(id,file){let db=await mediaDB();return new Promise((res,rej)=>{let tx=db.transaction('media','readwrite');tx.objectStore('media').put({id,blob:file,name:file.name,type:file.type});tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+async function getMedia(id){let db=await mediaDB();return new Promise((res,rej)=>{let r=db.transaction('media').objectStore('media').get(id);r.ons
+---
+
+      ambientAudio.preload='auto';
+      ambientAudio.volume=.40;
+    }
+    soundOn=true;
+    const p=ambientAudio.play();
+    if(p&&p.catch)p.catch(()=>showToast('Melodiyi başlatmak için ses düğmesine dokun.'));
+  }catch(e){showToast('Bu tarayıcı melodiyi başlatamadı.')}
+}
+function enterSite(){seedData();document.getElementById('entry').classList.add('hide');startAmbient();updateMemberUI();renderCommunityFeed();history.replaceState(null,'',location.pathname+location.search+'#feed')}
+function toggleSound(){
+  if(!ambientAudio){startAmbient();document.getElementById('soundBtn').textContent='🔊';return}
+  soundOn=!soundOn;
+  if(soundOn){ambientAudio.play().catch(()=>{});document.getElementById('soundBtn').textContent='🔊';showToast('Melodi açık')}
+  else{ambientAudio.pause();document.getElementById('soundBtn').textContent='🔇';showToast('Melodi kapalı')}
+}
+function requireMember(action){if(!currentUser||currentUser.status!=='active'){showToast('Bu işlem için üye girişi gerekli');openAuth();return false}return true}
+function openAuth(){document.getElementById('authSheet').classList.add('open');showLogin()}
+function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=`<div class="adminBox"><span class="badge">⚙ YÖNETİM MERKEZİ</span><p class="subtle">Yalnızca yetkili yönetici hesabı.</p></div><div class="field"><label>Yönetici e-posta</label><input id="loginEmail" type="email" value="admin@frekans.local" autocomplete="username"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="Yönetici şifresi" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="doLogin()">⚙ YÖNETİCİ OLARAK GİR</button>`}
+function showLogin(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><div class="adminBox"><span class="badge">YÖNETİCİ DENEMESİ</span><p class="subtle">E-posta: admin@frekans.local<br>Şifre: 0317</p></div>`}
+function showRegister(){document.getElementById('authTitle').textContent='Üye ol';document.getElementById('auth
+---
+tAudio.preload='auto';
+      ambientAudio.volume=.40;
+    }
+    soundOn=true;
+    const p=ambientAudio.play();
+    if(p&&p.catch)p.catch(()=>showToast('Melodiyi başlatmak için ses düğmesine dokun.'));
+  }catch(e){showToast('Bu tarayıcı melodiyi başlatamadı.')}
+}
+function enterSite(){seedData();document.getElementById('entry').classList.add('hide');startAmbient();updateMemberUI();renderCommunityFeed();history.replaceState(null,'',location.pathname+location.search+'#feed')}
+function toggleSound(){
+  if(!ambientAudio){startAmbient();document.getElementById('soundBtn').textContent='🔊';return}
+  soundOn=!soundOn;
+  if(soundOn){ambientAudio.play().catch(()=>{});document.getElementById('soundBtn').textContent='🔊';showToast('Melodi açık')}
+  else{ambientAudio.pause();document.getElementById('soundBtn').textContent='🔇';showToast('Melodi kapalı')}
+}
+function requireMember(action){if(!currentUser||currentUser.status!=='active'){showToast('Bu işlem için üye girişi gerekli');openAuth();return false}return true}
+function openAuth(){document.getElementById('authSheet').classList.add('open');showLogin()}
+function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=`<div class="adminBox"><span class="badge">⚙ YÖNETİM MERKEZİ</span><p class="subtle">Yalnızca yetkili yönetici hesabı.</p></div><div class="field"><label>Yönetici e-posta</label><input id="loginEmail" type="email" value="admin@frekans.local" autocomplete="username"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="Yönetici şifresi" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="doLogin()">⚙ YÖNETİCİ OLARAK GİR</button>`}
+function showLogin(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><div class="adminBox"><span class="badge">YÖNETİCİ DENEMESİ</span><p class="subtle">E-posta: admin@frekans.local<br>Şifre: 0317</p></div>`}
+function showRegister(){document.getElementById('authTitle').textContent='Üye ol';document.getElementById('authBody').innerH
+---
+abel><input id="regName" placeholder="GeceYolcusu"></div><div class="field"><label>E-posta</label><input id="regEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="regPass" type="password" placeholder="En az 4 karakter"></div><button class="btn" style="width:100%" onclick="doRegister()">ÜYELİK OLUŞTUR</button>`}
+function doRegister(){let name=(regName.value||'').trim(),email=(regEmail.value||'').trim().toLowerCase(),password=regPass.value||'';if(name.length<2||!email.includes('@')||password.length<4){showToast('Ad, geçerli e-posta ve en az 4 karakter şifre gerekli');return}let users=getUsers();if(users.some(u=>u.email===email)){showToast('Bu e-posta zaten kayıtlı');return}let u={id:'u'+Date.now(),name,email,password,role:'member',status:'active',joined:Date.now()};users.push(u);saveUsers(users);localStorage.setItem(STORE_SESSION,u.id);currentUser=u;closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}
+function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div
+---
+lue||'').trim(),email=(regEmail.value||'').trim().toLowerCase(),password=regPass.value||'';if(name.length<2||!email.includes('@')||password.length<4){showToast('Ad, geçerli e-posta ve en az 4 karakter şifre gerekli');return}let users=getUsers();if(users.some(u=>u.email===email)){showToast('Bu e-posta zaten kayıtlı');return}let u={id:'u'+Date.now(),name,email,password,role:'member',status:'active',joined:Date.now()};users.push(u);saveUsers(users);localStorage.setItem(STORE_SESSION,u.id);currentUser=u;closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}
+function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+---
+ers=getUsers();if(users.some(u=>u.email===email)){showToast('Bu e-posta zaten kayıtlı');return}let u={id:'u'+Date.now(),name,email,password,role:'member',status:'active',joined:Date.now()};users.push(u);saveUsers(users);localStorage.setItem(STORE_SESSION,u.id);currentUser=u;closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}
+function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+  if(ae)ae.style.display=isAdmin?'none':'block';
+}
+
+const rooms={three:{
+tag:'03:00 DOSYASI',
+title:'Neden gecenin 3’ü bu kadar konuşuluyor?',
+img:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop
+---
+={id:'u'+Date.now(),name,email,password,role:'member',status:'active',joined:Date.now()};users.push(u);saveUsers(users);localStorage.setItem(STORE_SESSION,u.id);currentUser=u;closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}
+function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+  if(ae)ae.style.display=isAdmin?'none':'block';
+}
+
+const rooms={three:{
+tag:'03:00 DOSYASI',
+title:'Neden gecenin 3’ü bu kadar konuşuluyor?',
+img:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1200&q=85',
+story:'Gecenin 3’ü yüzyıllardır folklor, korku anlatıları ve modern internet kültürün
+---
+lue||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+  if(ae)ae.style.display=isAdmin?'none':'block';
+}
+
+const rooms={three:{
+tag:'03:00 DOSYASI',
+title:'Neden gecenin 3’ü bu kadar konuşuluyor?',
+img:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1200&q=85',
+story:'Gecenin 3’ü yüzyıllardır folklor, korku anlatıları ve modern internet kültüründe özel bir yere konuyor. Peki bunun ne kadarı efsane, ne kadarı insan bedeninin gece ritmi?',
+longHtml:`<div class="researchBox">
+<h3>03:00 Dosyası: Efsane mi, bedenin saati mi?</h3>
+<p>Gecenin 3’ü hakkında anlatılanlar iki ayrı dünyadan geliyor: <b>folklor</b> ve <b>uyku bilimi</b>. Frekans bu ikisini birb
+---
+');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
+function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+  if(ae)ae.style.display=isAdmin?'none':'block';
+}
+
+const rooms={three:{
+tag:'03:00 DOSYASI',
+title:'Neden gecenin 3’ü bu kadar konuşuluyor?',
+img:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1200&q=85',
+story:'Gecenin 3’ü yüzyıllardır folklor, korku anlatıları ve modern internet kültüründe özel bir yere konuyor. Peki bunun ne kadarı efsane, ne kadarı insan bedeninin gece ritmi?',
+longHtml:`<div class="researchBox">
+<h3>03:00 Dosyası: Efsane mi, bedenin saati mi?</h3>
+<p>Gecenin 3’ü hakkında anlatılanlar iki ayrı dünyadan geliyor: <b>folklor</b> ve <b>uyku bilimi</b>. Frekans bu ikisini birbirine karıştırmadan aynı dosyada topluyor.</p>
+<div class="fact"><p><b>Folklor tarafı:</b> “Witching hour” ya da “devil’s hour” denen kavramın tek bir sabit saati yok. Tarih boyunca gece yarısı, 00:00–01:00 veya 03:00–04:00 gibi farklı aralıklar kullanılmış. Modern popüler kültürde özellikle 03:00–04:00 aralığı öne çıkıyor.</p></div>
+<
+---
+SSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}
+function logoutUser(){currentUser=null;try{localStorage.removeItem('frekans_current_user')}catch(e){}updateMemberUI();showToast('Çıkış yapıldı')}
+function updateMemberUI(){
+  let b=document.getElementById('memberStrip'),a=document.getElementById('adminLaunch'),ae=document.getElementById('alwaysAdminEntry');
+  if(!b)return;
+  if(!currentUser){
+    b.innerHTML=`<span>Misafir modundasın · paylaşım kilitli</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="openAuth()">ÜYE OL / GİRİŞ</button></div>`;
+    if(a)a.classList.remove('show');
+    if(ae)ae.style.display='block';
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  const pending=isAdmin?getCases().filter(c=>c.status==='pending').length:0;
+  b.innerHTML=`<span><strong>${escapeHtml(currentUser.name)}</strong> · ${isAdmin?'Yönetici':'Üye'}</span><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="miniBtn" onclick="goNav('profile')">PROFİL</button><button class="miniBtn" onclick="logoutUser()">ÇIKIŞ</button></div>`;
+  if(a){
+    a.classList.toggle('show',isAdmin);
+    if(isAdmin){a.querySelector('span').textContent=pending?pending+' vaka onay bekliyor · üyeler · moderasyon':'Vaka onayları · üyeler · moderasyon'}
+  }
+  if(ae)ae.style.display=isAdmin?'none':'block';
+}
+
+const rooms={three:{
+tag:'03:00 DOSYASI',
+title:'Neden gecenin 3’ü bu kadar konuşuluyor?',
+img:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1200&q=85',
+story:'Gecenin 3’ü yüzyıllardır folklor, korku anlatıları ve modern internet kültüründe özel bir yere konuyor. Peki bunun ne kadarı efsane, ne kadarı insan bedeninin gece ritmi?',
+longHtml:`<div class="researchBox">
+<h3>03:00 Dosyası: Efsane mi, bedenin saati mi?</h3>
+<p>Gecenin 3’ü hakkında anlatılanlar iki ayrı dünyadan geliyor: <b>folklor</b> ve <b>uyku bilimi</b>. Frekans bu ikisini birbirine karıştırmadan aynı dosyada topluyor.</p>
+<div class="fact"><p><b>Folklor tarafı:</b> “Witching hour” ya da “devil’s hour” denen kavramın tek bir sabit saati yok. Tarih boyunca gece yarısı, 00:00–01:00 veya 03:00–04:00 gibi farklı aralıklar kullanılmış. Modern popüler kültürde özellikle 03:00–04:00 aralığı öne çıkıyor.</p></div>
+<div class="fact"><p><b>Neden 3?</b> Yaygın Hristiyan folklor yorumlarından biri, gecenin 03:00’ünü İsa’nın geleneksel olarak kabul edilen ölüm saat
+---
+lı telefondan gelen arama',img:'https://images.unsplash.com/photo-1525598912003-663126343e1f?auto=format&fit=crop&w=1200&q=85',story:'Kullanıcı, uzun süredir kapalı olduğunu söylediği eski bir numaradan çağrı aldığını anlatıyor. Odaya katılanlar operatör hataları, numara taklidi ve benzer deneyimleri karşılaştırıyor.',count:'92 benzer bildirim'},dream:{tag:'RÜYALAR',title:'Birbirini tanımayanların aynı rüyası',img:'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=85',story:'Bir kullanıcı tekrar eden rüyasını ayrıntılarıyla yazdıktan sonra başka kullanıcılar benzer mekân ve nesneler tarif etti. Oda, ortak ayrıntıların gerçekten bağımsız olup olmadığını karşılaştırmak için açıldı.',count:'318 katılımcı'}};
+let currentRoomKey=''; let evidenceByRoom=getEvidenceState(); let commentsByRoom=getCommentState();
+function canModerateOwner(ownerId){return !!currentUser&&(currentUser.role==='admin'||currentUser.id===ownerId)}
+async function deleteEvidence(idx){let arr=evidenceByRoom[currentRoomKey]||[],it=arr[idx];if(!it||!canModerateOwner(it.ownerId)){showToast('Yalnız kendi kanıtını silebilirsin');return}if(it.mediaId){try{await deleteMedia(it.mediaId)}catch(e){}if(mediaUrlCache[it.mediaId]){try{URL.revokeObjectURL(mediaUrlCache[it.mediaId])}catch(e){}delete mediaUrlCache[it.mediaId]}}arr.splice(idx,1);saveEvidenceState(evidenceByRoom);await renderEvidenceArchive();showToast(currentUser.role==='admin'?'Kanıt yönetim tarafından kaldırıldı':'Kanıtın silindi')}
+async function renderEvidenceArchive(){let box=document.getElementById('evidenceList');if(!box)return;box.querySelectorAll('.evidenceUpload').forEach(n=>n.remove());let arr=evidenceByRoom[currentRoomKey]||[];for(let idx=0;idx<arr.length;idx++){let it=arr[idx],url=it.url||'';if(it.mediaId){try{if(!mediaUrlCache[it.mediaId]){let rec=await getMedia(it.mediaId);if(rec)mediaUrlCache[it.mediaId]=URL.createObjectURL(rec.blob)}url=mediaUrlCache[it.mediaId]||''}catch(e){}}let wrap=document.createElement('div');wrap.className='evidenceUpload'+(idx===arr.length-1?' evidenceNew':'');let media=document.createElement('div');media.className='media';let el;if(it.type.startsWith('image')){el=document.createElement('img');el.src=url;el.alt=it.name}else if(it.type.startsWith('video')){el=document.createElement('video');el.src=url;el.controls=true;el.playsInline=true}else{el=document.createElement('audio');el.src=url;el.controls=true}media.appendChild(el);let meta=document.createElement('div
+---
+
+===== onAuthStateChanged =====
+if(h!=='#create')document.getElementById('createSheet').classList.remove('open');handleHash()});
+
+document.addEventListener('click',function(e){
+  const b=e.target.closest('.roomOpenBtn[data-room]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  openRoom(b.dataset.room);
+});
+seedData();updateMemberUI();renderCommunityFeed();
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',e=>{if(e.target===s){s.classList.remove('open');if(s.id!=='navSheet')location.hash='feed'}}));
+
+window.addEventListener('click',function(e){
+  const btn=e.target.closest&&e.target.closest('.roomOpenBtn');
+  if(!btn)return;
+  e.preventDefault();e.stopPropagation();
+  const id=btn.getAttribute('data-room');
+  if(id)openRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=function(){do
+---
+ans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=function(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" autocomplete="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><button class="miniBtn" style="margin-top:10px;width:100%" onclick="forgotPassword()">ŞİFREMİ UNUTTUM</button><button class="miniBtn" style="margin-top:8px;width:100%" onclick="activateFirebaseAccount()">ESKİ ÜYELİĞİMİ AKTİF ET</button><p class="subtle" style="margin-top:12px">Hesabın yoksa <b onclick="showRegister()" style="cursor:pointer;color:#d53a4c">üye ol</b>.</p>`};
+window.showRegister=function(){document.getElementById('authTitle').textContent='Üye ol';document.getElementById('authBody').innerHTML=`<div class="field"><label>Rumuz / ad</label><input id="regName" maxlength="40" placeholder="GeceYolcusu"></div><div class="field"><label>E-posta</label><input id="regEmail" type="email" autocomplete="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="regPass" type="password" autocomplete="new-password" placeholder="En az 6 karakter"></div><button class="btn" style="width:100%" onclick="doR
+---
+
+===== getAuth =====
+('open');if(h!=='#create')document.getElementById('createSheet').classList.remove('open');handleHash()});
+
+document.addEventListener('click',function(e){
+  const b=e.target.closest('.roomOpenBtn[data-room]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  openRoom(b.dataset.room);
+});
+seedData();updateMemberUI();renderCommunityFeed();
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',e=>{if(e.target===s){s.classList.remove('open');if(s.id!=='navSheet')location.hash='feed'}}));
+
+window.addEventListener('click',function(e){
+  const btn=e.target.closest&&e.target.closest('.roomOpenBtn');
+  if(!btn)return;
+  e.preventDefault();e.stopPropagation();
+  const id=btn.getAttribute('data-room');
+  if(id)openRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=func
+---
+nRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=function(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" autocomplete="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><button class="miniBtn" style="margin-top:10px;width:100%" onclick="forgotPassword()">ŞİFREMİ UNUTTUM</button><button class="miniBtn" style="margin-top:8px;width:100%" onclick="activateFirebaseAccount()">ESKİ ÜYELİĞİMİ AKTİF ET</button><p class="subtle" style="margin-top:12px">H
+---
+
+===== initializeApp =====
+search','#map','#profile'].includes(h))document.getElementById('navSheet').classList.remove('open');if(h!=='#create')document.getElementById('createSheet').classList.remove('open');handleHash()});
+
+document.addEventListener('click',function(e){
+  const b=e.target.closest('.roomOpenBtn[data-room]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  openRoom(b.dataset.room);
+});
+seedData();updateMemberUI();renderCommunityFeed();
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',e=>{if(e.target===s){s.classList.remove('open');if(s.id!=='navSheet')location.hash='feed'}}));
+
+window.addEventListener('click',function(e){
+  const btn=e.target.closest&&e.target.closest('.roomOpenBtn');
+  if(!btn)return;
+  e.preventDefault();e.stopPropagation();
+  const id=btn.getAttribute('data-room');
+  if(id)openRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{update
+---
+tAttribute('data-room');
+  if(id)openRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=function(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" autocomplete="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><button class="miniBtn" style="margin-top:10px;width:100%" onclick="forgotPassword()">ŞİFREMİ UNUTTUM</button><button class="miniBtn" style="margin-top:8px;width:100%" onclick="activateFirebaseAccount()">ESKİ ÜYELİĞİMİ AKTİF ET</button><p clas
+---
+
+===== signInWithEmailAndPassword =====
+t').classList.remove('open');handleHash()});
+
+document.addEventListener('click',function(e){
+  const b=e.target.closest('.roomOpenBtn[data-room]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  openRoom(b.dataset.room);
+});
+seedData();updateMemberUI();renderCommunityFeed();
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',e=>{if(e.target===s){s.classList.remove('open');if(s.id!=='navSheet')location.hash='feed'}}));
+
+window.addEventListener('click',function(e){
+  const btn=e.target.closest&&e.target.closest('.roomOpenBtn');
+  if(!btn)return;
+  e.preventDefault();e.stopPropagation();
+  const id=btn.getAttribute('data-room');
+  if(id)openRoomSafe(id,e);
+},true);
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const CLOUD_NAME="xelka8hr", UPLOAD_PRESET="frekans_kanit", OWNER_EMAIL="evrencirpici77@gmail.com";
+const isOwner=()=>auth.currentUser?.email?.toLowerCase()===OWNER_EMAIL;
+const safe=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function uiUser(u,profile={}){return u?{id:u.uid,name:profile.displayName||u.displayName||u.email?.split('@')[0]||'Üye',email:u.email,role:u.email?.toLowerCase()===OWNER_EMAIL?'admin':'member',status:'active'}:null}
+
+async function loadProfile(u){try{const snap=await getDoc(doc(db,'users',u.uid));return snap.exists()?snap.data():{}}catch{return {}}}
+onAuthStateChanged(auth,async u=>{window.currentUser=u?uiUser(u,await loadProfile(u)):null;try{updateMemberUI()}catch{};try{await window.renderCommunityFeed()}catch{}});
+
+window.showLogin=function(){document.getElementById('authTitle').textContent='Giri
+---
+email=(regEmail.value||'').trim().toLowerCase(),password=regPass.value||'';if(name.length<2||!email.includes('@')||password.length<6){showToast('Ad, geçerli e-posta ve en az 6 karakter şifre gerekli');return}try{const c=await createUserWithEmailAndPassword(auth,email,password);await updateProfile(c.user,{displayName:name});await setDoc(doc(db,'users',c.user.uid),{displayName:name,email,createdAt:serverTimestamp(),status:'active'},{merge:true});window.currentUser=uiUser(c.user,{displayName:name});closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}catch(e){showToast(e.code==='auth/email-already-in-use'?'Bu e-posta zaten kayıtlı':e.code==='auth/weak-password'?'Şifre en az 6 karakter olmalı':'Üyelik oluşturulamadı') }};
+window.doLogin=async function(){const email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';try{const c=await signInWithEmailAndPassword(auth,email,password);window.currentUser=uiUser(c.user,await loadProfile(c.user));closeSheet('authSheet');updateMemberUI();showToast(isOwner()?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}catch{showToast('E-posta veya şifre hatalı')}};
+window.activateFirebaseAccount=async function(){const email=(document.getElementById('loginEmail')?.value||'').trim().toLowerCase(),password=document.getElementById('loginPass')?.value||'';if(!email.includes('@')||password.length<6){showToast('E-posta ve en az 6 karakterlik şifreni yaz');return}try{const c=await createUserWithEmailAndPassword(auth,email,password);const name=email.split('@')[0];await updateProfile(c.user,{displayName:name});await setDoc(doc(db,'users',c.user.uid),{displayName:name,email,createdAt:serverTimestamp(),status:'active'},{merge:true});window.currentUser=uiUser(c.user,{displayName:name});closeSheet('authSheet');updateMemberUI();showToast('Üyeliğin Firebase üzerinde aktif edildi')}catch(e){if(e.code==='auth/email-already-in-use'){showToast('Bu hesap Firebase’de kayıtlı. GİRİŞ YAP veya ŞİFREMİ UNUTTUM kullan.')}else if(e.code==='auth/weak-password'){showToast('Şifre en az 6 karakter olmalı')}else{showToast('Üyelik etkinleştirilemedi')}}};
+window.forgotPassword=async function(){const el=document.getElementById('loginEmail'),email=(el?.value||'').trim();if(!email.includes('@')){showToast('Önce e-posta adresini yaz');return}try{await sendPasswordResetEmail(auth,email);showToast('Bu e-postaya ait Firebase hesabı varsa yenileme bağlantısı gönderildi. Gelen kutusu ve spam klasörünü kontrol et.')}
+---
