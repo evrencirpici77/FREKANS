@@ -1,0 +1,39 @@
+name: FREKANS kod inceleme
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-auth.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Üyelik kodlarını çıkar
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8',errors='ignore')
+          terms=['Bu işlem için üye girişi gerekli','Deneme sürümünde','addComment','addEvidenceToRoom','getCurrentUser','currentUser','onAuthStateChanged','getAuth','initializeApp','signInWithEmailAndPassword']
+          out=[]
+          for term in terms:
+              out.append('\n===== '+term+' =====\n')
+              start=0
+              n=0
+              while True:
+                  i=s.find(term,start)
+                  if i<0 or n>=12: break
+                  out.append(s[max(0,i-900):min(len(s),i+1600)])
+                  out.append('\n---\n')
+                  start=i+len(term); n+=1
+          Path('debug-auth.txt').write_text(''.join(out),encoding='utf-8')
+          PY
+      - name: Kaydet
+        run: |
+          git config user.name 'FREKANS Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add debug-auth.txt
+          git commit -m 'FREKANS auth kodunu inceleme için çıkar' || exit 0
+          git push
