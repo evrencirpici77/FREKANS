@@ -52,6 +52,27 @@ jobs:
           s=s.replace('if(!currentUser){showToast("Bu işlem için üye girişi gerekli");return}',
                       'if(!window.frekansFirebaseAuth?.currentUser){showToast("Bu işlem için üye girişi gerekli");return}')
 
+          # Yönetim Merkezi de yalnızca gerçek Firebase yönetici hesabını kullansın.
+          old_admin_login="function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=\`<div class=\"adminBox\"><span class=\"badge\">⚙ YÖNETİM MERKEZİ</span><p class=\"subtle\">Yalnızca yetkili yönetici hesabı.</p></div><div class=\"field\"><label>Yönetici e-posta</label><input id=\"loginEmail\" type=\"email\" value=\"admin@frekans.local\" autocomplete=\"username\"></div><div class=\"field\"><label>Şifre</label><input id=\"loginPass\" type=\"password\" placeholder=\"Yönetici şifresi\" autocomplete=\"current-password\"></div><button class=\"btn\" style=\"width:100%\" onclick=\"doLogin()\">⚙ YÖNETİCİ OLARAK GİR</button>\`}"
+          new_admin_login="function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=\`<div class=\"adminBox\"><span class=\"badge\">⚙ YÖNETİM MERKEZİ</span><p class=\"subtle\">Firebase yönetici hesabınla giriş yap.</p></div><div class=\"field\"><label>Yönetici e-posta</label><input id=\"loginEmail\" type=\"email\" value=\"evrencirpici77@gmail.com\" autocomplete=\"username\"></div><div class=\"field\"><label>Şifre</label><input id=\"loginPass\" type=\"password\" placeholder=\"Firebase şifren\" autocomplete=\"current-password\"></div><button class=\"btn\" style=\"width:100%\" onclick=\"doLogin()\">⚙ YÖNETİCİ OLARAK GİR</button><button class=\"miniBtn\" style=\"margin-top:10px;width:100%\" onclick=\"forgotPassword()\">ŞİFREMİ UNUTTUM</button>\`}"
+          if old_admin_login not in s: raise SystemExit('Eski yönetici giriş ekranı bulunamadı')
+          s=s.replace(old_admin_login,new_admin_login,1)
+
+          # Eski local doLogin/logout isimleri Firebase fonksiyonlarını gölgeleyemesin.
+          s=s.replace("function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);",
+                      "function legacyLocalLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);",1)
+          s=s.replace("function logout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}",
+                      "function legacyLocalLogout(){localStorage.removeItem(STORE_SESSION);currentUser=null;updateMemberUI();closeNavSheet();showToast('Çıkış yapıldı')}",1)
+
+          # Yönetim paneli kapısını Firebase'deki gerçek owner e-postasına bağla.
+          s=re.sub(r"function openAdminPanel\(\)\{if\(!currentUser\|\|currentUser\.role!=='admin'\)\{showToast\('Yönetici girişi gerekli'\);openAuth",
+                   "function openAdminPanel(){const fu=window.frekansFirebaseAuth?.currentUser;if(!fu||fu.email?.toLowerCase()!=='evrencirpici77@gmail.com'){showToast('Yönetici girişi gerekli');openAdminLogin",
+                   s,count=1)
+
+          # Statik demo yönetici hesabını ve görünür deneme kutusunu üretimden çıkar.
+          s=s.replace("<div class=\"adminBox\"><span class=\"badge\">YÖNETİCİ DENEMESİ</span><p class=\"subtle\">E-posta: admin@frekans.local<br>Şifre: 0317</p></div>","")
+          s=s.replace("email:'admin@frekans.local',password:'0317'","email:'disabled-local-admin@invalid',password:'disabled'",1)
+
           # Canlı sürümde kalmaması gereken deneme açıklamasının tüm varyasyonlarını temizle.
           s=re.sub(r'Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir\.\s*Canlı sürümde sunucuya yüklenip moderasyondan geçecek\.',
                    'Yüklediğiniz kanıtlar yayınlanmadan önce moderasyon kontrolünden geçer.',s)
@@ -62,6 +83,8 @@ jobs:
           # Yayına girmeden önce beklediğimiz düzeltmeler gerçekten dosyada mı kontrol et.
           grep -q 'window.frekansFirebaseAuth=auth' index.html
           grep -q 'window.frekansFirebaseAuth?.currentUser' index.html
+          grep -q "value=\\\"evrencirpici77@gmail.com\\\"" index.html
+          if grep -q 'value="admin@frekans.local"' index.html; then echo 'Eski yönetici girişi kaldı'; exit 1; fi
           if grep -q 'Deneme sürümünde dosya yalnız bu cihazdaki açık sayfada görüntülenir' index.html; then
             echo 'Eski deneme metni hâlâ dosyada'
             exit 1
