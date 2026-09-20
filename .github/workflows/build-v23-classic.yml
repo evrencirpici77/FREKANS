@@ -1,0 +1,29 @@
+name: Build V23 from classic FREKANS
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-v23-classic.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v23-clean
+      - name: Restore classic FREKANS visual into V23 test
+        run: |
+          rm -rf /tmp/frekans-old && mkdir -p /tmp/frekans-old
+          unzip -o FREKANS_FIREBASE_V22_HAZIR.zip -d /tmp/frekans-old
+          test -f /tmp/frekans-old/index.html
+          cp /tmp/frekans-old/index.html v23/index.html
+          sed -i 's/async async function addEvidenceToRoom/async function addEvidenceToRoom/' v23/index.html
+      - name: Commit to v23-clean
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v23/index.html
+          git diff --cached --quiet || git commit -m "V23 testine klasik FREKANS gorunumunu tasi"
+          git push origin HEAD:v23-clean
