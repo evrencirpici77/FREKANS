@@ -1,0 +1,38 @@
+name: V23 V21 Gorunumunu Geri Getir
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/v23-v21-look.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v23-clean
+      - name: V21 tabanli gorunumu V23 teste tasi
+        run: |
+          rm -rf /tmp/frekans-old
+          mkdir -p /tmp/frekans-old
+          unzip -o FREKANS_FIREBASE_V22_HAZIR.zip -d /tmp/frekans-old
+          test -f /tmp/frekans-old/index.html
+          cp /tmp/frekans-old/index.html v23/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("v23/index.html")
+          s=p.read_text(encoding="utf-8")
+          s=s.replace("FREKANS V22","FREKANS V23")
+          s=s.replace("async async function addEvidenceToRoom","async function addEvidenceToRoom")
+          p.write_text(s,encoding="utf-8")
+          print("V21/V22 gorunumu V23 test indexine tasindi:",len(s))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v23/index.html
+          git diff --cached --quiet || git commit -m "V23 teste eski FREKANS gorunumunu geri getir"
+          git push origin HEAD:v23-clean
