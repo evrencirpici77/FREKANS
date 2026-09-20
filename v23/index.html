@@ -76,7 +76,7 @@ let currentUser=null;
 const STORE_USERS='frekans_v7_users', STORE_SESSION='frekans_v7_session', STORE_CASES='frekans_v7_cases', STORE_EVIDENCE='frekans_v15_evidence', STORE_COMMENTS='frekans_v15_comments';
 function seedData(){
   let users=JSON.parse(localStorage.getItem(STORE_USERS)||'[]');
-  if(!users.length){users=[{id:'admin',name:'Frekans Yönetimi',email:'admin@frekans.local',password:'0317',role:'admin',status:'active',joined:Date.now()}];localStorage.setItem(STORE_USERS,JSON.stringify(users));}
+  if(!users.length){users=[{id:'admin',name:'Frekans Yönetimi',email:'',password:'0317',role:'admin',status:'active',joined:Date.now()}];localStorage.setItem(STORE_USERS,JSON.stringify(users));}
   currentUser=users.find(u=>u.id===localStorage.getItem(STORE_SESSION))||null;
 }
 function saveUsers(u){localStorage.setItem(STORE_USERS,JSON.stringify(u))}
@@ -120,8 +120,8 @@ function toggleSound(){
 }
 function requireMember(action){if(!currentUser||currentUser.status!=='active'){showToast('Bu işlem için üye girişi gerekli');openAuth();return false}return true}
 function openAuth(){document.getElementById('authSheet').classList.add('open');showLogin()}
-function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=`<div class="adminBox"><span class="badge">⚙ YÖNETİM MERKEZİ</span><p class="subtle">Yalnızca yetkili yönetici hesabı.</p></div><div class="field"><label>Yönetici e-posta</label><input id="loginEmail" type="email" value="admin@frekans.local" autocomplete="username"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="Yönetici şifresi" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="doLogin()">⚙ YÖNETİCİ OLARAK GİR</button>`}
-function showLogin(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><div class="adminBox"><span class="badge">YÖNETİCİ DENEMESİ</span><p class="subtle">E-posta: admin@frekans.local<br>Şifre: 0317</p></div>`}
+function openAdminLogin(){document.getElementById('authSheet').classList.add('open');document.getElementById('authTitle').textContent='Yönetici girişi';document.getElementById('authBody').innerHTML=`<div class="adminBox"><span class="badge">⚙ YÖNETİM MERKEZİ</span><p class="subtle">Yalnızca yetkili yönetici hesabı.</p></div><div class="field"><label>Yönetici e-posta</label><input id="loginEmail" type="email" value="" autocomplete="username"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="Yönetici şifresi" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="doLogin()">⚙ YÖNETİCİ OLARAK GİR</button>`}
+function showLogin(){document.getElementById('authTitle').textContent='Giriş yap';document.getElementById('authBody').innerHTML=`<div class="field"><label>E-posta</label><input id="loginEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="loginPass" type="password" placeholder="••••••"></div><button class="btn" style="width:100%" onclick="doLogin()">GİRİŞ YAP</button><div class="adminBox"><span class="badge">YÖNETİCİ GİRİŞİ</span><p class="subtle">E-posta: <br></p></div>`}
 function showRegister(){document.getElementById('authTitle').textContent='Üye ol';document.getElementById('authBody').innerHTML=`<div class="field"><label>Rumuz / ad</label><input id="regName" placeholder="GeceYolcusu"></div><div class="field"><label>E-posta</label><input id="regEmail" type="email" placeholder="mail@ornek.com"></div><div class="field"><label>Şifre</label><input id="regPass" type="password" placeholder="En az 4 karakter"></div><button class="btn" style="width:100%" onclick="doRegister()">ÜYELİK OLUŞTUR</button>`}
 function doRegister(){let name=(regName.value||'').trim(),email=(regEmail.value||'').trim().toLowerCase(),password=regPass.value||'';if(name.length<2||!email.includes('@')||password.length<4){showToast('Ad, geçerli e-posta ve en az 4 karakter şifre gerekli');return}let users=getUsers();if(users.some(u=>u.email===email)){showToast('Bu e-posta zaten kayıtlı');return}let u={id:'u'+Date.now(),name,email,password,role:'member',status:'active',joined:Date.now()};users.push(u);saveUsers(users);localStorage.setItem(STORE_SESSION,u.id);currentUser=u;closeSheet('authSheet');updateMemberUI();showToast('Üyelik açıldı. Frekansa hoş geldin.')}
 function doLogin(){let email=(loginEmail.value||'').trim().toLowerCase(),password=loginPass.value||'';let u=getUsers().find(x=>x.email===email&&x.password===password);if(!u){showToast('E-posta veya şifre hatalı');return}if(u.status!=='active'){showToast('Bu üyelik yönetim tarafından kapatılmış');return}currentUser=u;localStorage.setItem(STORE_SESSION,u.id);closeSheet('authSheet');updateMemberUI();showToast(u.role==='admin'?'Yönetici olarak giriş yapıldı':'Giriş yapıldı')}
@@ -313,4 +313,47 @@ window.renderSavedComments=async function(){const box=document.getElementById('c
 window.renderAdminCases=async function(){const box=document.getElementById('adminCases');if(!box||!isOwner())return;try{const snap=await getDocs(query(collection(db,'cases'),where('status','==','pending'),limit(50)));box.innerHTML=snap.empty?'<p class="story">Bekleyen vaka yok.</p>':snap.docs.map(d=>{const x=d.data();return `<div class="adminBox"><span class="badge wait">ONAY BEKLİYOR</span><h4>${safe(x.title)}</h4><div class="subtle">${safe(x.category)} · ${safe(x.authorName)}</div><p class="story">${safe(x.story)}</p><div class="fileActions"><button class="miniBtn approve" onclick="moderateCase('${d.id}','approved')">✓ YAYINLA</button><button class="miniBtn danger" onclick="moderateCase('${d.id}','rejected')">× REDDET</button></div></div>`}).join('')}catch{box.innerHTML='<p class="story">Vaka onayları yüklenemedi.</p>'}};
 window.moderateCase=async function(id,status){if(!isOwner())return;try{await updateDoc(doc(db,'cases',id),{status,moderatedAt:serverTimestamp()});await renderAdminCases();await renderCommunityFeed();showToast(status==='approved'?'Vaka yayına alındı':'Vaka reddedildi')}catch{showToast('Onay işlemi yapılamadı')}};
 window.openAdminPanel=function(){if(!isOwner()){showToast('Yönetici girişi gerekli');openAuth();return}openNav('profile');location.hash='profile'};
-</script></body></html>
+</script>
+<!-- V23_FIREBASE_BRIDGE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore,doc,setDoc,serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const OWNER="evrencirpici77@gmail.com";
+window.frekansFirebaseAuth=auth;
+const uiUser=u=>u?({id:u.uid,name:u.displayName||u.email?.split("@")[0]||"Üye",email:u.email,role:u.email?.toLowerCase()===OWNER?"admin":"member",status:"active"}):null;
+onAuthStateChanged(auth,u=>{window.currentUser=uiUser(u);try{updateMemberUI()}catch(e){}});
+window.requireMember=function(){
+  const u=auth.currentUser;
+  if(!u){try{showToast("Bu işlem için üye girişi gerekli");openAuth()}catch(e){} return false}
+  window.currentUser=uiUser(u); return true;
+};
+window.doLogin=async function(){
+  const e=(document.getElementById("loginEmail")?.value||"").trim().toLowerCase();
+  const pw=document.getElementById("loginPass")?.value||"";
+  try{await signInWithEmailAndPassword(auth,e,pw);window.currentUser=uiUser(auth.currentUser);try{closeSheet("authSheet");updateMemberUI();showToast(window.currentUser.role==="admin"?"Yönetici olarak giriş yapıldı":"Giriş yapıldı")}catch(x){}}
+  catch(err){try{showToast("E-posta veya şifre hatalı")}catch(x){}}
+};
+window.doRegister=async function(){
+  const name=(document.getElementById("regName")?.value||"").trim();
+  const email=(document.getElementById("regEmail")?.value||"").trim().toLowerCase();
+  const pw=document.getElementById("regPass")?.value||"";
+  if(!name||!email||pw.length<6){try{showToast("Ad, e-posta ve en az 6 karakter şifre gerekli")}catch(x){};return}
+  try{const c=await createUserWithEmailAndPassword(auth,email,pw);await updateProfile(c.user,{displayName:name});await setDoc(doc(db,"users",c.user.uid),{displayName:name,email,status:"active",createdAt:serverTimestamp()});window.currentUser=uiUser(c.user);try{closeSheet("authSheet");updateMemberUI();showToast("Üyelik oluşturuldu")}catch(x){}}
+  catch(err){try{showToast(err.code==="auth/email-already-in-use"?"Bu e-posta zaten kayıtlı":"Üyelik oluşturulamadı")}catch(x){}}
+};
+window.resetPassword=async function(){
+  const email=(document.getElementById("loginEmail")?.value||document.getElementById("regEmail")?.value||"").trim().toLowerCase();
+  if(!email){try{showToast("Önce e-posta adresini yaz")}catch(x){};return}
+  try{await sendPasswordResetEmail(auth,email);try{showToast("Hesap varsa şifre yenileme bağlantısı e-postana gönderildi")}catch(x){}}
+  catch(err){try{showToast("Şifre yenileme işlemi tamamlanamadı")}catch(x){}}
+};
+window.logout=async function(){await signOut(auth);window.currentUser=null;try{updateMemberUI();showToast("Çıkış yapıldı")}catch(e){}};
+window.openAdminPanel=(function(old){
+  return function(){const u=auth.currentUser;if(!u||u.email?.toLowerCase()!==OWNER){try{showToast("Yönetici girişi gerekli");openAuth()}catch(e){};return}window.currentUser=uiUser(u);return old&&old()}
+})(window.openAdminPanel);
+</script>
+
+</body></html>
