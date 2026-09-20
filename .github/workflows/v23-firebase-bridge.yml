@@ -1,0 +1,83 @@
+name: V23 Classic Firebase Bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/v23-firebase-bridge.yml'
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v23-clean
+      - name: Inject clean Firebase auth bridge into classic FREKANS
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("v23/index.html")
+          s=p.read_text(encoding="utf-8")
+          marker="<!-- V23_FIREBASE_BRIDGE -->"
+          if marker in s:
+              raise SystemExit("bridge already exists")
+          bridge=r'''
+          <!-- V23_FIREBASE_BRIDGE -->
+          <script type="module">
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+          import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+          import { getFirestore,doc,setDoc,serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+          const cfg={apiKey:"AIzaSyDOhcJ3bom6KQohHRQtwUeJF8RS_V0e688",authDomain:"frekans-75e21.firebaseapp.com",projectId:"frekans-75e21",storageBucket:"frekans-75e21.firebasestorage.app",messagingSenderId:"115676490010",appId:"1:115676490010:web:084710269367caea68a4a3"};
+          const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+          const OWNER="evrencirpici77@gmail.com";
+          window.frekansFirebaseAuth=auth;
+          const uiUser=u=>u?({id:u.uid,name:u.displayName||u.email?.split("@")[0]||"Üye",email:u.email,role:u.email?.toLowerCase()===OWNER?"admin":"member",status:"active"}):null;
+          onAuthStateChanged(auth,u=>{window.currentUser=uiUser(u);try{updateMemberUI()}catch(e){}});
+          window.requireMember=function(){
+            const u=auth.currentUser;
+            if(!u){try{showToast("Bu işlem için üye girişi gerekli");openAuth()}catch(e){} return false}
+            window.currentUser=uiUser(u); return true;
+          };
+          window.doLogin=async function(){
+            const e=(document.getElementById("loginEmail")?.value||"").trim().toLowerCase();
+            const pw=document.getElementById("loginPass")?.value||"";
+            try{await signInWithEmailAndPassword(auth,e,pw);window.currentUser=uiUser(auth.currentUser);try{closeSheet("authSheet");updateMemberUI();showToast(window.currentUser.role==="admin"?"Yönetici olarak giriş yapıldı":"Giriş yapıldı")}catch(x){}}
+            catch(err){try{showToast("E-posta veya şifre hatalı")}catch(x){}}
+          };
+          window.doRegister=async function(){
+            const name=(document.getElementById("regName")?.value||"").trim();
+            const email=(document.getElementById("regEmail")?.value||"").trim().toLowerCase();
+            const pw=document.getElementById("regPass")?.value||"";
+            if(!name||!email||pw.length<6){try{showToast("Ad, e-posta ve en az 6 karakter şifre gerekli")}catch(x){};return}
+            try{const c=await createUserWithEmailAndPassword(auth,email,pw);await updateProfile(c.user,{displayName:name});await setDoc(doc(db,"users",c.user.uid),{displayName:name,email,status:"active",createdAt:serverTimestamp()});window.currentUser=uiUser(c.user);try{closeSheet("authSheet");updateMemberUI();showToast("Üyelik oluşturuldu")}catch(x){}}
+            catch(err){try{showToast(err.code==="auth/email-already-in-use"?"Bu e-posta zaten kayıtlı":"Üyelik oluşturulamadı")}catch(x){}}
+          };
+          window.resetPassword=async function(){
+            const email=(document.getElementById("loginEmail")?.value||document.getElementById("regEmail")?.value||"").trim().toLowerCase();
+            if(!email){try{showToast("Önce e-posta adresini yaz")}catch(x){};return}
+            try{await sendPasswordResetEmail(auth,email);try{showToast("Hesap varsa şifre yenileme bağlantısı e-postana gönderildi")}catch(x){}}
+            catch(err){try{showToast("Şifre yenileme işlemi tamamlanamadı")}catch(x){}}
+          };
+          window.logout=async function(){await signOut(auth);window.currentUser=null;try{updateMemberUI();showToast("Çıkış yapıldı")}catch(e){}};
+          window.openAdminPanel=(function(old){
+            return function(){const u=auth.currentUser;if(!u||u.email?.toLowerCase()!==OWNER){try{showToast("Yönetici girişi gerekli");openAuth()}catch(e){};return}window.currentUser=uiUser(u);return old&&old()}
+          })(window.openAdminPanel);
+          </script>
+          '''
+          s=s.replace("</body>",bridge+"\n</body>")
+          # Remove visible demo credentials without disturbing classic design.
+          s=s.replace("admin@frekans.local","")
+          s=s.replace("Şifre: 0317","")
+          s=s.replace("YÖNETİCİ DENEMESİ","YÖNETİCİ GİRİŞİ")
+          p.write_text(s,encoding="utf-8")
+          assert "V23_FIREBASE_BRIDGE" in s
+          assert "admin@frekans.local" not in s
+          PY
+      - name: Commit bridge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v23/index.html
+          git diff --cached --quiet || git commit -m "V23 klasik FREKANS'a temiz Firebase girisini bagla"
+          git push origin HEAD:v23-clean
